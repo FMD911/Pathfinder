@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pathfinder – Career Quiz</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff7ed;--card:#fff;--text:#1f1a2e;--muted:#6b6480;--a:#7c3aed;--b:#f97316;--line:#eadfce}
+:root[data-theme="dark"]{--bg:#17122b;--card:#231c3d;--text:#f5f0ff;--muted:#a79fc4;--a:#a78bfa;--b:#fb923c;--line:#3a3160}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17122b;--card:#231c3d;--text:#f5f0ff;--muted:#a79fc4;--a:#a78bfa;--b:#fb923c;--line:#3a3160}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:660px;margin:0 auto;padding:24px 18px 40px}
+h1{font-size:2rem;line-height:1.15;margin:0 0 10px;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:1.2rem;margin:20px 0 10px}p{color:var(--muted);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 6px 24px rgba(124,58,237,.10)}
+button{font:inherit}
+.opt{display:block;width:100%;text-align:left;padding:13px 16px;margin:0 0 9px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
+.opt:hover,.opt.on{border-color:var(--a);background:rgba(124,58,237,.08)}
+.go{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;border:0;border-radius:12px;padding:14px 22px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+.alt{background:var(--card);color:var(--a);border:2px solid var(--a)}
+.bar{height:8px;background:var(--line);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b));transition:width .3s}
+.job{border-left:5px solid var(--b);padding:8px 12px;margin:0 0 12px;background:rgba(124,58,237,.06);border-radius:0 10px 10px 0}
+.job .t{display:flex;justify-content:space-between;gap:8px;font-weight:700}.fit{color:var(--a);white-space:nowrap}
+.job span{display:block;font-size:.9rem;color:var(--muted)}
+.pro:before{content:"＋ ";color:#16a34a;font-weight:700}.con:before{content:"－ ";color:#dc2626;font-weight:700}
+.lv{display:inline-block;font-size:.8rem;padding:3px 10px;border-radius:99px;background:var(--a);color:#fff}
+.real{border:2px dashed var(--b);border-radius:12px;padding:12px 14px;margin:16px 0}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.9rem}.row div{flex:1;height:8px;background:var(--line);border-radius:8px;overflow:hidden}.row i{display:block;height:100%;background:var(--a)}
+</style></head><body><main><div id="app"></div></main>
+<script>
+/* Types: 0 Creator, 1 Thinker, 2 Helper, 3 Builder, 4 Leader. Every question lists one answer per type, in this order. */
+const TY=["Creator","Thinker","Helper","Builder","Leader"],EM=["🎨","🔍","🤝","🛠️","🚀"];
+const DESC=["You value originality, freedom and doing things your own way.","You value understanding, logic and getting to the truth.","You value people, care and being useful to others.","You value practical results, reliability and real work.","You value drive, influence and moving things forward."];
+const Q=[
+["When you're scrolling with nothing to do, what holds you longest?","Striking visuals and original ideas","Explanations of how and why things work","Real people's stories","Videos of things being made or fixed","Success, money and power stories"],
+["On a completely free day you most want to…","Do something spontaneous and different","Learn or figure something out","Spend time with people I like","Be active or get something done","Make progress on a goal"],
+["A friend is stuck with a problem. You…","Suggest an unusual way to look at it","Break it down logically","Listen and support them","Offer to help fix it","Tell them what to do next"],
+["Something at home breaks. You…","Find a creative workaround","Look up how it works","Ask someone I trust for help","Try to fix it myself","Organise who will deal with it"],
+["What would make a job feel worth it?","Freedom to do it my way","Learning and solving hard things","Knowing I helped people","Seeing real results","Good pay and moving up"],
+["A big change is announced. Your first thought?","What's new about it?","Why, and how does it work?","How will it affect people?","How do we actually do it?","Who's in charge of it?"],
+["In a group you usually…","Come up with ideas","Ask the questions","Keep the mood good","Do the work","Take charge"],
+["What drains you the most?","Repetition and strict rules","Confusion and vagueness","Conflict and tension","Standing around doing nothing","Having no control"],
+["Money matters to you mostly because…","It buys freedom to live my way","It gives security through planning","It lets me look after people close to me","It lets me build or own something","It brings independence and status"],
+["After a bad day you recharge by…","Doing something that lets me express how I feel","Being alone and thinking it through","Talking with someone","Keeping busy with my hands or moving","Planning how tomorrow goes better"],
+["When you disagree with a rule you…","Ignore it or do it differently","Ask why it exists","Ask if it's fair to everyone","Follow it if it works","Try to get it changed"],
+["The people who inspire you most are…","Original voices who broke the mould","Thinkers who changed how we see the world","Selfless people who help others","People who built things through hard work","Leaders and revolutionaries who rallied others"],
+["How would you like to be remembered?","As original","As someone who got it right","As kind","As dependable","As someone who made an impact"],
+["Your perfect work day, with rest included, is…","Varied, no two the same, with time to wander","Calm, with time to think, then fully off","Friendly, good people around, then fully off","Practical, done on time, then fully off","Busy and ambitious, followed by a reward"],
+["Facing a big decision you…","Go with my gut","Compare the facts and options","Think about who it affects","Pick what's practical","Pick what moves me forward"],
+["In a crisis you naturally…","Improvise","Stay calm and assess","Look after people","Act fast and fix it","Take charge"],
+["At a party you're most likely…","Entertaining people","Deep in a conversation with one person","Making sure everyone is okay","Helping set up or sort something out","Meeting as many people as possible"],
+["You get 1000 euros. You…","Do something new I always wanted to","Research the best use first","Spend it on people I love","Put it into something useful","Use it to make more money"],
+["What would be the worst kind of job?","One that never lets me be myself","One that never makes me think","One with no contact with people","One that produces nothing real","One with no way up"],
+["After you make a mistake you…","Laugh and try another way","Work out what went wrong","Apologise and make it right","Fix it quickly","Own it and move on"],
+["Your friends would probably call you…","Unique","Smart","Caring","Reliable","Driven"],
+["Which headline would you click?","A new idea that changes everything","Experts explain why it really happens","Local person helps the whole neighbourhood","How they actually built it","How one founder built an empire"],
+["You get a long-term task. You…","Start in my own style","Research first","Check with others","Just start working","Make a plan and timeline"],
+["Speaking in front of people, you…","Enjoy standing out","Prefer to be well prepared with facts","Connect with the audience","Would rather just do the work","Take the lead"],
+["Which feels like a win?","Making something people enjoy","Solving something difficult","Making someone's life easier","Finishing a solid job","Reaching a goal I set"],
+["On holiday you'd want…","To wander with no plan","To learn about the place","Time with the people I'm with","Active adventure","A well-planned itinerary"],
+["Your relationship with routine?","I hate it","Fine, if it's logical","Good, if it's shared with people","Good, if it's productive","I use it to hit my goals"],
+["You prefer to get things done…","My own way","The most efficient way","Together with others","Directly, no fuss","By guiding others"],
+["Entering a new place, you notice first…","How it looks and feels","How it works","The people","How it's built","Who runs it"],
+["You win the lottery. You…","Do whatever I feel like","Learn everything I've been curious about","Share it with the people I care about","Buy land or build something","Invest it and grow it"],
+["In an argument you…","Argue passionately","Use facts","Look for peace","Walk away and get on with things","Try to win"],
+["What gets you out of bed?","Something new","Curiosity","People who need me","A task to finish","A goal to chase"],
+["What annoys you most in others?","Closed-mindedness","Careless thinking","Selfishness","Laziness","Indecision"],
+["On a quiet evening you…","Daydream or play around with an idea","Read or watch something to learn","Message friends","Cook or tinker with something","Plan the next week"],
+["Which best describes your ambition?","Live life my own way","Understand as much as I can","Make a difference to others","Build something solid","Go as far as possible"],
+["When someone asks you for advice you…","Give an unusual take","Give facts","Give support","Give practical steps","Say what I would do"],
+["A new gadget or app appears. You…","Play with it","Learn it in depth","Ask how it affects people","See if it's useful","See who can profit from it"],
+["You treat yourself to…","Something fun and new","Something that teaches me","Time with people","Something useful","Something that shows I've made it"],
+["Doomscrolling at 2 a.m., you're most likely on…","Weird, funny or beautiful clips","Rabbit holes about how things work","Drama and people's lives","DIY, cars, gadgets and crafts","Business, money and success"]];
+/* Jobs per level (0 no experience, 1 junior, 2 senior): [title, main type, minor type, pro, con] */
+const JB=[[
+["Content or social media assistant",0,4,"Flexible, and builds a portfolio","Low pay at first, work is public"],
+["Event or production assistant",0,3,"Gets you onto real sets and events","Irregular hours, low pay"],
+["QA tester trainee",1,3,"Easy door into IT","Repetitive at first"],
+["Data entry / analyst trainee",1,3,"Learn spreadsheets and SQL","Can be monotonous"],
+["Customer support for foreign companies",2,1,"Many firms hire and train here; English helps","Shift work and difficult callers"],
+["Live casino game presenter",2,4,"Studios hire presenters; very social","Night shifts, check pay and contract"],
+["Apprentice electrician or mechanic",3,1,"Paid learning, always in demand","Physical, early starts"],
+["Warehouse or production operator",3,4,"Quick start, stable","Physical and repetitive"],
+["Sales or call-centre rep",4,2,"Learn persuasion, commission possible","Pressure; check the pay structure"],
+["Event staff / promoter",4,0,"Networking, flexible","Seasonal, unstable income"]],[
+["Video editor / motion designer",0,1,"Strong demand from foreign clients","Competitive, portfolio needed"],
+["Junior graphic or UX designer",0,1,"Many remote options","Low starting pay, portfolio needed"],
+["Data analyst",1,4,"Good demand in outsourcing","Needs SQL and Excel skills"],
+["Junior developer",1,0,"High pay ceiling","Steep learning curve"],
+["Customer success specialist",2,4,"Support with room to grow","Emotional load"],
+["Junior HR / recruiter",2,4,"People-focused, clear path","Targets and pressure"],
+["Technician / CNC operator",3,1,"Skilled trades are in demand","Physical, shift work"],
+["Logistics coordinator",3,4,"Practical and steady","Stressful deadlines"],
+["Business development rep",4,2,"Fast growth","Targets and rejection"],
+["Project coordinator",4,1,"Organising is a hireable skill","Responsibility without much authority"]],[
+["Art or creative director",0,4,"Shapes the final result","Tight deadlines, client pressure"],
+["Senior editor / producer",0,4,"High creative control","Long hours near deadlines"],
+["Senior developer / data scientist",1,0,"Best-paid long-term path","Constant learning, burnout risk"],
+["Analytics or product lead",1,4,"Mix of thinking and leading","Meetings and politics"],
+["Support team lead / HR manager",2,4,"Lead people, steady career","Conflicts and emotional load"],
+["Trainer or counsellor",2,1,"Meaningful, flexible later in life","Often needs extra certification"],
+["Site or production supervisor",3,4,"Authority and practical work","Responsible for safety and delays"],
+["Engineer",3,1,"Strong demand, good pay","Usually needs a technical degree"],
+["Account or project manager",4,2,"Own clients and budgets","Stressful, many stakeholders"],
+["Small business owner",4,3,"Independence, upside","Risky; check real numbers first"]]];
+const EXP=["No experience","Some (1-3 years)","Experienced (3+ years)"],EDU=["High school","Studying now","University degree","Courses or self-taught"];
+const NOTE=["Skills and proof of work matter most. Aim at entry roles and treat them as paid training.","Look for part-time work or internships in your field to start building experience.","A degree opens junior and senior roles faster, but employers still want practical proof.","Show your skills with projects or certificates. Many Serbian employers accept proof over diplomas for junior roles."];
+const LV=["No experience","Junior","Senior"];
+let st,i,qs,ans;const app=document.getElementById("app");
+const sh=a=>{a=[...a];for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+function start(){st={e:0,d:0};app.innerHTML=`<h1>Pathfinder</h1><p>20 questions drawn from a bank of ${Q.length}, mixed every time. No right or wrong answers; if nothing fits, pick Neutral. Misclicked? Use the back button.</p><div class="card"><h2 style="margin-top:0">Your experience</h2>${EXP.map((x,k)=>`<button class="opt ${k?'':'on'}" data-g="e" data-k="${k}">${x}</button>`).join("")}<h2>Your education</h2>${EDU.map((x,k)=>`<button class="opt ${k?'':'on'}" data-g="d" data-k="${k}">${x}</button>`).join("")}<button class="go" id="s">Start the quiz</button></div>`;
+app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{st[b.dataset.g]=+b.dataset.k;app.querySelectorAll(`[data-g=${b.dataset.g}]`).forEach(x=>x.classList.remove("on"));b.classList.add("on")});
+document.getElementById("s").onclick=()=>{qs=sh(Q).slice(0,20);i=0;ans=[];ask()}}
+function ask(){const q=qs[i],o=sh([0,1,2,3,4]);app.innerHTML=`<div class="bar"><i style="width:${i/20*100}%"></i></div><div class="card"><p>Question ${i+1} of 20</p><h2 style="margin-top:0">${q[0]}</h2>${o.map(k=>`<button class="opt" data-k="${k}">${q[k+1]}</button>`).join("")}<button class="opt" data-k="-1" style="text-align:center;color:var(--muted);border-style:dashed">Neutral / none of these</button>${i?'<button class="go alt" id="bk">← Back to previous question</button>':""}</div>`;
+app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;i++;i<20?ask():done()});const bk=document.getElementById("bk");if(bk)bk.onclick=()=>{i--;ask()}}
+function rank(l,p){return JB[l].map(j=>({j,fit:Math.min(97,Math.round((.7*p[j[1]]+.3*p[j[2]])/.4*100))})).sort((a,b)=>b.fit-a.fit)}
+function card(x){const j=x.j;return`<div class="job"><div class="t"><span style="color:var(--text);font-size:1rem">${j[0]}</span><span class="fit">${x.fit}% fit</span></div><span class="pro">${j[3]}</span><span class="con">${j[4]}</span></div>`}
+function done(){const sc=[0,0,0,0,0];ans.forEach(k=>{if(k>=0)sc[k]++});const n=Math.max(1,sc.reduce((a,b)=>a+b,0)),p=sc.map(s=>s/n);const r=sc.map((s,k)=>[s,k]).sort((a,b)=>b[0]-a[0]||Math.random()-.5);const t=r[0][1],t2=r[1][1],lv=st.e;
+const nxt=lv<2?`<h2>Grow into (${LV[lv+1]})</h2>${rank(lv+1,p).slice(0,2).map(card).join("")}`:"";
+app.innerHTML=`<div class="card"><p>Your strongest side</p><h1>${EM[t]} ${TY[t]}</h1><p>${DESC[t]} Second: <b>${TY[t2]}</b>. ${DESC[t2]}</p>${sc.map((s,k)=>`<div class="row"><span style="width:70px">${TY[k]}</span><div><i style="width:${p[k]*100}%"></i></div><span>${Math.round(p[k]*100)}%</span></div>`).join("")}
+<h2>Best matches now <span class="lv">${LV[lv]}</span></h2>${rank(lv,p).slice(0,6).map(card).join("")}<p style="font-size:.85rem">Fit % is an estimate from your answers, not a guarantee.</p><div class="real"><b>Reality check</b><p style="margin:6px 0 0">${NOTE[st.d]}</p></div>${nxt}
+<h2>Finding it in Serbia 🇷🇸</h2><div class="job"><b>Where to look</b><span>Poslovi Infostud and LinkedIn; HelloWorld.rs for IT. Outsourcing and foreign-client companies hire here often. Search in Serbian and English.</span></div><div class="job"><b>Spot fake listings</b><span>No company name, no pay range, vague duties, "easy money", or any request to pay for the job or training.</span></div><div class="job"><b>Check before applying</b><span>Look up the company on APR (apr.gov.rs), its website and LinkedIn. Ask for the pay range and contract type early, and insist on a written contract with contributions paid.</span></div>
+<button class="go" id="r">Retake the quiz</button></div><p style="font-size:.85rem;margin-top:14px">General guidance for Serbia; verify details yourself. A quiz is a starting point, not a verdict.</p>`;
+document.getElementById("r").onclick=start}
+start();
+</script></body></html>
